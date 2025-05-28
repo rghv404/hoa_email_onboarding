@@ -1,0 +1,240 @@
+{% extends 'hoa_management/base.html' %}
+
+{% block title %}{{ hoa.name }} - HOA Email System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'hoa_list' %}">HOAs</a></li>
+                <li class="breadcrumb-item active">{{ hoa.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- HOA Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-building"></i> {{ hoa.name }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Contact Information</h6>
+                        <p>
+                            <i class="bi bi-envelope"></i> <a href="mailto:{{ hoa.contact_email }}">{{ hoa.contact_email }}</a><br>
+                            {% if hoa.phone %}
+                                <i class="bi bi-telephone"></i> <a href="tel:{{ hoa.phone }}">{{ hoa.phone }}</a><br>
+                            {% endif %}
+                            {% if hoa.website %}
+                                <i class="bi bi-globe"></i> <a href="{{ hoa.website }}" target="_blank">{{ hoa.website }}</a><br>
+                            {% endif %}
+                        </p>
+
+                        <h6>Address</h6>
+                        <p>
+                            <i class="bi bi-geo-alt"></i> {{ hoa.address }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if hoa.management_company %}
+                        <h6>Management Company</h6>
+                        <p>
+                            <i class="bi bi-building"></i> {{ hoa.management_company }}
+                        </p>
+                        {% endif %}
+
+                        {% if hoa.established_date %}
+                        <h6>Established</h6>
+                        <p>
+                            <i class="bi bi-calendar"></i> {{ hoa.established_date|date:"F Y" }}
+                        </p>
+                        {% endif %}
+
+                        {% if hoa.monthly_fee_range %}
+                        <h6>Monthly Fee Range</h6>
+                        <p>
+                            <i class="bi bi-currency-dollar"></i> {{ hoa.monthly_fee_range }}
+                        </p>
+                        {% endif %}
+
+                        <h6>Statistics</h6>
+                        <p>
+                            <i class="bi bi-house"></i> {{ properties.count }} active properties<br>
+                            <i class="bi bi-people"></i> {{ hoa.total_units }} total units
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Properties -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-house"></i> Properties ({{ properties.count }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if properties %}
+                <div class="property-list">
+                    {% for property in properties %}
+                    <div class="border-bottom py-2 {% if not forloop.last %}mb-2{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ property.address }}</h6>
+                                <small class="text-muted">
+                                    <span class="badge bg-secondary">{{ property.get_property_type_display }}</span>
+                                    {% if property.unit_count > 1 %}
+                                        <span class="badge bg-info">{{ property.unit_count }} units</span>
+                                    {% endif %}
+                                    {% if property.monthly_hoa_fee %}
+                                        <span class="badge bg-success">${{ property.monthly_hoa_fee }}/month</span>
+                                    {% endif %}
+                                </small>
+                                {% if property.year_built %}
+                                <br><small class="text-muted">Built in {{ property.year_built }}</small>
+                                {% endif %}
+                                {% if property.square_footage %}
+                                <br><small class="text-muted">{{ property.square_footage|floatformat:0 }} sq ft</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-house display-4 text-muted"></i>
+                    <p class="text-muted mt-2">No active properties found for this HOA.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Email Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-envelope"></i> Email Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'email_preview' hoa.id %}" class="btn btn-outline-info">
+                        <i class="bi bi-eye"></i> Preview Email
+                    </a>
+
+                    <form method="post" action="{% url 'send_email' hoa.id %}" onsubmit="return confirm('Are you sure you want to send an email to {{ hoa.name }}?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-send-email w-100">
+                            <i class="bi bi-send"></i> Send Onboarding Email
+                        </button>
+                    </form>
+                </div>
+
+                <hr>
+
+                <div class="text-center">
+                    <small class="text-muted">
+                        Email will be sent to:<br>
+                        <strong>{{ hoa.contact_email }}</strong>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Email Response -->
+        {% if latest_response %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-envelope-open"></i> Latest Response
+                    {% if latest_response.status == 'new' %}
+                        <span class="badge bg-primary ms-2">New</span>
+                    {% elif latest_response.status == 'reviewed' %}
+                        <span class="badge bg-success ms-2">Reviewed</span>
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="bi bi-calendar"></i> {{ latest_response.created_at|date:"M d, Y g:i A" }}<br>
+                        <i class="bi bi-envelope"></i> {{ latest_response.from_email }}<br>
+                        <i class="bi bi-chat-text"></i> {{ latest_response.subject }}
+                    </small>
+                </div>
+
+                <!-- Email Preview -->
+                <div class="mb-3">
+                    <h6 class="small mb-2">Response Preview:</h6>
+                    <div class="border rounded p-2" style="background-color: #f8f9fa; max-height: 150px; overflow-y: auto;">
+                        <small style="white-space: pre-wrap;">{{ latest_response.text_content|default:latest_response.html_content|truncatechars:300 }}</small>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-grid gap-2">
+                    {% if latest_response.status == 'new' %}
+                    <form method="post" action="{% url 'mark_response_reviewed' latest_response.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm w-100">
+                            <i class="bi bi-check-circle"></i> Mark as Reviewed
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <a href="{% url 'email_response_detail' latest_response.id %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye"></i> View Full Response
+                    </a>
+                </div>
+
+                <!-- Collapsible Full Response -->
+                <div class="collapse mt-3" id="fullResponse">
+                    <div class="border rounded p-2" style="background-color: #f8f9fa; max-height: 200px; overflow-y: auto;">
+                        <small style="white-space: pre-wrap;">{{ latest_response.text_content|default:latest_response.html_content|truncatechars:1000 }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Quick Info
+                </h6>
+            </div>
+            <div class="card-body">
+                <small>
+                    <strong>Created:</strong> {{ hoa.created_at|date:"M d, Y g:i A" }}<br>
+                    <strong>Last Updated:</strong> {{ hoa.updated_at|date:"M d, Y g:i A" }}<br>
+                    <strong>Total Properties:</strong> {{ hoa.properties.count }}<br>
+                    <strong>Active Properties:</strong> {{ properties.count }}<br>
+                    <strong>Email Responses:</strong> {{ hoa.email_responses.count }}
+                </small>
+
+                <hr>
+
+                <div class="d-grid">
+                    <a href="/admin/hoa_management/hoa/{{ hoa.id }}/change/" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil"></i> Edit HOA
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

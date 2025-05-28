@@ -1,0 +1,12 @@
+[project]
+name = "hoa-email-onboarding"
+version = "0.1.0"
+description = "HOA Email Onboarding System with Postmark Integration"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "django==5.0.9",
+    "postmarker>=1.0",
+    "python-decouple>=3.8",
+    "faker>=20.1.0",
+]
