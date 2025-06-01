@@ -142,3 +142,6 @@ STATIC_URL = "/static/"
 # Postmark Configuration
 POSTMARK_API_TOKEN = config("POSTMARK_API_TOKEN", default="")
 POSTMARK_FROM_EMAIL = config("POSTMARK_FROM_EMAIL", default="noreply@yourdomain.com")
+
+# Google Gemini AI configuration
+GEMINI_API_KEY = config("GEMINI_API_KEY", default="")

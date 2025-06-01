@@ -116,7 +116,30 @@ class EmailResponseAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("Analysis", {"fields": ("response_completeness_score", "content_preview")}),
+        (
+            "AI Analysis",
+            {
+                "fields": (
+                    "ai_analysis_result",
+                    "ai_reasoning",
+                    "ai_processed_at",
+                    "response_completeness_score",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "AI Generated Response",
+            {
+                "fields": (
+                    "ai_generated_response",
+                    "generated_response_sent",
+                    "generated_response_sent_at",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        ("Analysis", {"fields": ("content_preview",)}),
         ("Review Information", {"fields": ("reviewed_by", "reviewed_at")}),
         (
             "Timestamps",

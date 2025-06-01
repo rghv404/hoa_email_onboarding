@@ -83,6 +83,138 @@
                 </div>
             </div>
         </div>
+
+        <!-- AI Analysis Results -->
+        {% if email_response.ai_analysis_result %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-robot"></i> AI Analysis Results
+                    {% if email_response.ai_processed_at %}
+                        <small class="text-muted">- {{ email_response.ai_processed_at|date:"M d, Y g:i A" }}</small>
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                {% with analysis=email_response.ai_analysis_result %}
+
+                <!-- Category and Confidence -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Category</h6>
+                        <span class="badge bg-primary fs-6">{{ analysis.category|default:"Unknown"|title }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Confidence</h6>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar" role="progressbar" style="width: {{ analysis.confidence|default:0 }}%">
+                                {{ analysis.confidence|default:0 }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Reasoning -->
+                {% if email_response.ai_reasoning %}
+                <div class="mb-3">
+                    <h6>AI Reasoning</h6>
+                    <div class="alert alert-info">
+                        <i class="bi bi-lightbulb"></i> {{ email_response.ai_reasoning }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Extracted Data -->
+                {% if analysis.extracted_data %}
+                <div class="mb-3">
+                    <h6>Extracted Information</h6>
+                    <div class="row">
+                        {% for key, value in analysis.extracted_data.items %}
+                            {% if value %}
+                            <div class="col-md-6 mb-2">
+                                <strong>
+                                    {% if key == "manages_properties" %}Property Management
+                                    {% elif key == "properties_confirmation" %}Properties Confirmation
+                                    {% elif key == "regular_dues_amount" %}Regular Dues Amount
+                                    {% elif key == "payment_method" %}Payment Method
+                                    {% elif key == "payment_address" %}Payment Address
+                                    {% elif key == "master_hoa_name" %}Master HOA Name
+                                    {% elif key == "phone_number" %}Phone Number
+                                    {% elif key == "management_company" %}Management Company
+                                    {% else %}{{ key|title }}{% endif %}:
+                                </strong><br>
+                                <span class="text-muted">{{ value }}</span>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Completeness Score -->
+                <div class="mb-3">
+                    <h6>Response Completeness</h6>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ email_response.response_completeness_score }}%">
+                            {{ email_response.response_completeness_score }}%
+                        </div>
+                    </div>
+                </div>
+
+                {% endwith %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- AI Generated Response -->
+        {% if email_response.ai_generated_response %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-envelope-paper"></i> AI Generated Response
+                </h4>
+                {% if email_response.generated_response_sent %}
+                    <span class="badge bg-success">Sent {{ email_response.generated_response_sent_at|date:"M d, g:i A" }}</span>
+                {% else %}
+                    <span class="badge bg-warning">Ready to Send</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <!-- Generated Email Preview -->
+                <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa;">
+                    <div class="mb-2">
+                        <strong>Subject:</strong> Re: {{ email_response.subject }}
+                    </div>
+                    <hr>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        {% if email_response.ai_generated_response %}
+                            <iframe srcdoc="{{ email_response.ai_generated_response|escape }}" style="width: 100%; height: 300px; border: none;"></iframe>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Send Action -->
+                {% if not email_response.generated_response_sent %}
+                <form method="post" action="{% url 'send_generated_response' email_response.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-send"></i> Send Generated Response
+                    </button>
+                </form>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        Demo mode: Email will be sent to raghv@mainstay.io instead of {{ email_response.hoa.contact_email }}
+                    </small>
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> Response has been sent successfully!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <div class="col-lg-4">
@@ -136,31 +268,60 @@
                     </form>
                     {% endif %}
 
+                    {% if not email_response.ai_analysis_result %}
                     <form method="post" action="{% url 'parse_and_generate_response' email_response.id %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-robot"></i> Parse and Generate Response
                         </button>
                     </form>
+                    {% else %}
+                    <form method="post" action="{% url 'parse_and_generate_response' email_response.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-arrow-clockwise"></i> Re-analyze with AI
+                        </button>
+                    </form>
+                    {% endif %}
 
-                    <!-- Enhanced AI Feature Preview -->
+                    <!-- AI Status Display -->
                     <div class="mt-3 p-3 bg-light rounded" style="font-size: 0.85rem;">
                         <div class="text-center mb-2">
                             <i class="bi bi-robot text-primary" style="font-size: 1.2rem;"></i>
-                            <strong class="text-primary">AI Feature Preview</strong>
+                            <strong class="text-primary">AI Processing Status</strong>
                         </div>
+
+                        {% if email_response.ai_analysis_result %}
                         <div class="mb-2">
                             <i class="bi bi-check-circle text-success"></i>
-                            <strong>Current:</strong> Email received and stored for processing
+                            <strong>Analysis:</strong> Complete ({{ email_response.ai_analysis_result.category|title }})
+                        </div>
+                        {% if email_response.ai_generated_response %}
+                        <div class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>Response:</strong> Generated and ready
+                        </div>
+                        {% endif %}
+                        {% if email_response.generated_response_sent %}
+                        <div>
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>Status:</strong> Response sent successfully
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <div class="mb-2">
+                            <i class="bi bi-clock text-warning"></i>
+                            <strong>Status:</strong> Ready for AI analysis
                         </div>
                         <div class="mb-2">
-                            <i class="bi bi-gear text-warning"></i>
-                            <strong>Next:</strong> Gemini LLM will parse this email and extract structured data
+                            <i class="bi bi-gear text-muted"></i>
+                            <strong>Next:</strong> Click "Parse and Generate Response" to analyze
                         </div>
                         <div>
-                            <i class="bi bi-send text-info"></i>
-                            <strong>Future:</strong> Automated intelligent response generation based on HOA requirements
+                            <i class="bi bi-send text-muted"></i>
+                            <strong>Then:</strong> Review and send AI-generated response
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

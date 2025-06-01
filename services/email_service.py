@@ -181,6 +181,8 @@ class EmailService:
         from_email: str | None = None,
         is_html: bool = False,
         reply_to: str | None = None,
+        in_reply_to: str | None = None,
+        references: str | None = None,
     ) -> dict[str, any]:
         """
         Send email using Postmark
@@ -192,6 +194,8 @@ class EmailService:
             from_email: Sender email (optional, uses default if not provided)
             is_html: Whether the body is HTML format
             reply_to: Reply-to email address (optional)
+            in_reply_to: Message ID this email is replying to (for threading)
+            references: References header for email threading
 
         Returns:
             Dictionary with success status and message
@@ -222,6 +226,16 @@ class EmailService:
 
             if reply_to:
                 email_data["ReplyTo"] = reply_to
+
+            # Add threading headers for email conversation
+            headers = []
+            if in_reply_to:
+                headers.append({"Name": "In-Reply-To", "Value": in_reply_to})
+            if references:
+                headers.append({"Name": "References", "Value": references})
+
+            if headers:
+                email_data["Headers"] = headers
 
             if is_html:
                 email_data["HtmlBody"] = body

@@ -201,6 +201,31 @@ class EmailResponse(models.Model):
     reviewed_at = models.DateTimeField(
         null=True, blank=True, help_text="When this response was reviewed"
     )
+
+    # AI Analysis fields
+    ai_analysis_result = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="AI analysis result with categorization and extracted data",
+    )
+    ai_generated_response = models.TextField(
+        blank=True, null=True, help_text="AI-generated follow-up email response"
+    )
+    ai_reasoning = models.TextField(
+        blank=True,
+        null=True,
+        help_text="AI explanation for the categorization and response",
+    )
+    ai_processed_at = models.DateTimeField(
+        null=True, blank=True, help_text="When this response was processed by AI"
+    )
+    generated_response_sent = models.BooleanField(
+        default=False, help_text="Whether the AI-generated response has been sent"
+    )
+    generated_response_sent_at = models.DateTimeField(
+        null=True, blank=True, help_text="When the generated response was sent"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

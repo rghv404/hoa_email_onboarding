@@ -29,4 +29,9 @@ urlpatterns = [
         views.parse_and_generate_response,
         name="parse_and_generate_response",
     ),
+    path(
+        "responses/<int:response_id>/send-generated-response/",
+        views.send_generated_response,
+        name="send_generated_response",
+    ),
 ]

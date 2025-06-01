@@ -12,6 +12,7 @@ from django.views.decorators.http import require_http_methods
 
 from services.email_processor import EmailResponseProcessor
 from services.email_service import EmailService
+from services.gemini_service import GeminiEmailAnalyzer
 
 from .models import HOA, EmailResponse, Property
 
@@ -251,16 +252,118 @@ def email_response_detail(request, response_id):
 @require_http_methods(["POST"])
 def parse_and_generate_response(request, response_id):
     """
-    Parse email response and generate automated response using LLM
-    Currently placeholder - will be connected to Gemini LLM later
+    Parse email response and generate automated response using Gemini AI
     """
     email_response = get_object_or_404(EmailResponse, id=response_id)
 
-    # Placeholder for future LLM integration
-    messages.info(
-        request,
-        f"Parse and Generate Response feature will be implemented with Gemini LLM. "
-        f"Response from {email_response.hoa.name} is ready for processing.",
-    )
+    try:
+        # Initialize Gemini analyzer
+        analyzer = GeminiEmailAnalyzer()
+
+        # Process the email response
+        success = analyzer.process_email_response(email_response)
+
+        if success:
+            # Get the analysis result for display
+            analysis = email_response.ai_analysis_result or {}
+            category = analysis.get("category", "unknown")
+            confidence = analysis.get("confidence", 0)
+
+            messages.success(
+                request,
+                f"✅ AI Analysis Complete! "
+                f"Category: {category.replace('_', ' ').title()} "
+                f"(Confidence: {confidence}%). "
+                f"Generated response is ready for review.",
+            )
+        else:
+            messages.error(
+                request,
+                f"❌ Failed to process email response from {email_response.hoa.name}. "
+                f"Please check the logs for details.",
+            )
+
+    except ValueError as e:
+        # Handle missing API key
+        messages.error(
+            request,
+            f"⚙️ Configuration Error: {str(e)}. "
+            f"Please configure GEMINI_API_KEY in your environment.",
+        )
+    except Exception as e:
+        # Handle other errors
+        messages.error(
+            request,
+            f"❌ Error processing email: {str(e)}. "
+            f"Please try again or check the logs.",
+        )
+
+    return redirect("email_response_detail", response_id=response_id)
+
+
+@require_http_methods(["POST"])
+def send_generated_response(request, response_id):
+    """
+    Send the AI-generated response email to the HOA
+    """
+    email_response = get_object_or_404(EmailResponse, id=response_id)
+
+    # Check if we have a generated response
+    if not email_response.ai_generated_response:
+        messages.error(
+            request,
+            "No AI-generated response found. Please run 'Parse and Generate Response' first.",
+        )
+        return redirect("email_response_detail", response_id=response_id)
+
+    # Check if already sent
+    if email_response.generated_response_sent:
+        messages.warning(
+            request,
+            f"Generated response was already sent on {email_response.generated_response_sent_at.strftime('%Y-%m-%d %H:%M')}.",
+        )
+        return redirect("email_response_detail", response_id=response_id)
+
+    try:
+        email_service = EmailService()
+
+        # Prepare the email
+        subject = f"Re: {email_response.subject}"
+        body = email_response.ai_generated_response
+
+        # For demo purposes, redirect to demo email (same logic as original onboarding)
+        default_demo_email = "raghv@mainstay.io"
+        demo_email = default_demo_email  # TODO: Could be enhanced to remember user's custom demo email
+
+        # Send the email with proper threading headers
+        result = email_service.send_email(
+            to_email=demo_email,
+            subject=subject,
+            body=body,
+            is_html=True,
+            reply_to="4c17207b2cb109e33fb619e01b59252c@inbound.postmarkapp.com",
+            in_reply_to=email_response.message_id,
+            references=email_response.message_id,
+        )
+
+        if result["success"]:
+            # Mark as sent
+            email_response.generated_response_sent = True
+            email_response.generated_response_sent_at = timezone.now()
+            email_response.save()
+
+            messages.success(
+                request,
+                f"✅ AI-generated response sent successfully! "
+                f"📧 Demo email sent to: {demo_email} "
+                f"(Original HOA: {email_response.hoa.contact_email})",
+            )
+        else:
+            messages.error(
+                request, f"❌ Failed to send generated response: {result['message']}"
+            )
+
+    except Exception as e:
+        messages.error(request, f"❌ Error sending generated response: {str(e)}")
 
     return redirect("email_response_detail", response_id=response_id)
