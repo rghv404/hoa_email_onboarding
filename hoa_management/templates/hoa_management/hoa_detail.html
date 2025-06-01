@@ -129,26 +129,61 @@
                 </h5>
             </div>
             <div class="card-body">
+                <!-- Demo Notice -->
+                <div class="alert alert-info alert-sm mb-3" style="font-size: 0.875rem;">
+                    <i class="bi bi-info-circle"></i> <strong>Demo Mode:</strong>
+                    <em>All emails are redirected to a demo address for testing purposes, not to the actual HOA contact email shown in the database.</em>
+                </div>
+
                 <div class="d-grid gap-2">
                     <a href="{% url 'email_preview' hoa.id %}" class="btn btn-outline-info">
                         <i class="bi bi-eye"></i> Preview Email
                     </a>
 
-                    <form method="post" action="{% url 'send_email' hoa.id %}" onsubmit="return confirm('Are you sure you want to send an email to {{ hoa.name }}?');">
+                    <form method="post" action="{% url 'send_email' hoa.id %}" id="emailForm">
                         {% csrf_token %}
+
+                        <!-- Demo Email Input -->
+                        <div class="mb-3">
+                            <label for="demo_email" class="form-label small">
+                                <i class="bi bi-envelope-at"></i> Demo Email Address (Optional)
+                            </label>
+                            <input type="email" class="form-control form-control-sm" id="demo_email" name="demo_email"
+                                   placeholder="raghv@mainstay.io (default)">
+                            <div class="form-text" style="font-size: 0.75rem;">
+                                Leave blank to use default demo address. Enter your email to receive the test email.
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-send-email w-100">
-                            <i class="bi bi-send"></i> Send Onboarding Email
+                            <i class="bi bi-send"></i> Send Demo Email
                         </button>
                     </form>
                 </div>
 
                 <hr>
 
+                <!-- Demo Information -->
                 <div class="text-center">
                     <small class="text-muted">
-                        Email will be sent to:<br>
-                        <strong>{{ hoa.contact_email }}</strong>
+                        <strong>HOA Contact:</strong> {{ hoa.contact_email }}<br>
+                        <em style="font-size: 0.8rem;">
+                            <i class="bi bi-arrow-right"></i> Redirected to demo email for testing
+                        </em>
                     </small>
+                </div>
+
+                <!-- Spam Warning & AI Feature Preview -->
+                <div class="mt-3 p-2 bg-light rounded" style="font-size: 0.8rem;">
+                    <div class="mb-2">
+                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                        <strong>Check spam folder</strong> - Demo emails might be filtered
+                    </div>
+                    <div>
+                        <i class="bi bi-robot text-primary"></i>
+                        <strong>AI Feature Preview:</strong> Reply to the email to test inbound processing.
+                        <em>Future Gemini LLM integration will automatically parse responses and generate intelligent replies!</em>
+                    </div>
                 </div>
             </div>
         </div>

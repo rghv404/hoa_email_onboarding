@@ -1,0 +1,59 @@
+# Ruff configuration for HOA Email Onboarding project
+
+# Global settings
+line-length = 88
+target-version = "py312"
+
+# Exclude directories
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "migrations",
+    "static",
+    "media",
+    "node_modules",
+]
+
+[lint]
+# Enable specific rule sets
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "DJ",  # flake8-django
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+]
+
+# Ignore specific rules
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+    "B008",  # Do not perform function calls in argument defaults
+    "DJ001", # Avoid using `null=True` on string-based fields
+]
+
+[lint.per-file-ignores]
+# Allow unused imports in __init__.py files
+"__init__.py" = ["F401"]
+# Allow print statements in management commands
+"*/management/commands/*.py" = ["T201"]
+# Allow longer lines in settings files
+"settings.py" = ["E501"]
+
+[lint.isort]
+# Django-specific isort configuration
+known-first-party = ["hoa_management", "services"]
+
+[format]
+# Use double quotes for strings
+quote-style = "double"
+
+# Use spaces for indentation
+indent-style = "space"
+
+# Don't skip magic trailing comma
+skip-magic-trailing-comma = false

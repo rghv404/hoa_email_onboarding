@@ -1,9 +1,9 @@
 import logging
-from typing import Dict, Optional
+
 from django.conf import settings
 from postmarker.core import PostmarkClient
-from hoa_management.models import HOA
 
+from hoa_management.models import HOA
 
 logger = logging.getLogger(__name__)
 
@@ -15,12 +15,17 @@ class EmailService:
 
     def __init__(self):
         self.client = None
-        if settings.POSTMARK_API_TOKEN and settings.POSTMARK_API_TOKEN != 'your_postmark_api_token_here':
+        if (
+            settings.POSTMARK_API_TOKEN
+            and settings.POSTMARK_API_TOKEN != "your_postmark_api_token_here"
+        ):
             self.client = PostmarkClient(server_token=settings.POSTMARK_API_TOKEN)
         else:
-            logger.warning("Postmark API token not configured. Email sending will be simulated.")
+            logger.warning(
+                "Postmark API token not configured. Email sending will be simulated."
+            )
 
-    def generate_hoa_onboarding_email(self, hoa: HOA) -> Dict[str, str]:
+    def generate_hoa_onboarding_email(self, hoa: HOA) -> dict[str, str]:
         """
         Generate email content for HOA onboarding
 
@@ -31,8 +36,12 @@ class EmailService:
             Dictionary containing email subject and body
         """
         properties = hoa.properties.filter(is_active=True)
-        property_list = "\n".join([f"• {prop.address} ({prop.get_property_type_display()})"
-                                  for prop in properties[:10]])  # Limit to first 10
+        property_list = "\n".join(
+            [
+                f"• {prop.address} ({prop.get_property_type_display()})"
+                for prop in properties[:10]
+            ]
+        )  # Limit to first 10
 
         if properties.count() > 10:
             property_list += f"\n... and {properties.count() - 10} more properties"
@@ -46,7 +55,7 @@ class EmailService:
                 <li style="margin-bottom: 8px;">
                     <strong>{prop.address}</strong><br>
                     <span style="color: #666; font-size: 14px;">Type: {prop.get_property_type_display()}</span>
-                    {f'<br><span style="color: #666; font-size: 14px;">Units: {prop.unit_count}</span>' if prop.unit_count > 1 else ''}
+                    {f'<br><span style="color: #666; font-size: 14px;">Units: {prop.unit_count}</span>' if prop.unit_count > 1 else ""}
                 </li>
             """
 
@@ -80,8 +89,8 @@ class EmailService:
         <ul style="list-style: none; padding-left: 0;">
             <li><strong>Name:</strong> {hoa.name}</li>
             <li><strong>Contact Email:</strong> {hoa.contact_email}</li>
-            <li><strong>Phone:</strong> {hoa.phone or 'Not provided'}</li>
-            <li><strong>Management Company:</strong> {hoa.management_company or 'Self-managed'}</li>
+            <li><strong>Phone:</strong> {hoa.phone or "Not provided"}</li>
+            <li><strong>Management Company:</strong> {hoa.management_company or "Self-managed"}</li>
         </ul>
     </div>
 
@@ -162,14 +171,17 @@ class EmailService:
 </body>
 </html>"""
 
-        return {
-            'subject': subject,
-            'body': body
-        }
+        return {"subject": subject, "body": body}
 
-    def send_email(self, to_email: str, subject: str, body: str,
-                   from_email: Optional[str] = None, is_html: bool = False,
-                   reply_to: Optional[str] = None) -> Dict[str, any]:
+    def send_email(
+        self,
+        to_email: str,
+        subject: str,
+        body: str,
+        from_email: str | None = None,
+        is_html: bool = False,
+        reply_to: str | None = None,
+    ) -> dict[str, any]:
         """
         Send email using Postmark
 
@@ -189,59 +201,64 @@ class EmailService:
 
         if not self.client:
             # Simulate email sending for development/testing
-            logger.info(f"SIMULATED EMAIL SEND:")
+            logger.info("SIMULATED EMAIL SEND:")
             logger.info(f"To: {to_email}")
             logger.info(f"From: {from_email}")
             logger.info(f"Subject: {subject}")
             logger.info(f"Body: {body[:200]}...")
 
             return {
-                'success': True,
-                'message': 'Email simulated successfully (Postmark not configured)',
-                'message_id': 'simulated-' + str(hash(f"{to_email}{subject}"))
+                "success": True,
+                "message": "Email simulated successfully (Postmark not configured)",
+                "message_id": "simulated-" + str(hash(f"{to_email}{subject}")),
             }
 
         try:
             email_data = {
-                'From': from_email,
-                'To': to_email,
-                'Subject': subject,
+                "From": from_email,
+                "To": to_email,
+                "Subject": subject,
             }
 
             if reply_to:
-                email_data['ReplyTo'] = reply_to
+                email_data["ReplyTo"] = reply_to
 
             if is_html:
-                email_data['HtmlBody'] = body
+                email_data["HtmlBody"] = body
             else:
-                email_data['TextBody'] = body
+                email_data["TextBody"] = body
 
             response = self.client.emails.send(**email_data)
 
-            logger.info(f"Email sent successfully to {to_email}. Message ID: {response['MessageID']}")
+            logger.info(
+                f"Email sent successfully to {to_email}. Message ID: {response['MessageID']}"
+            )
 
             return {
-                'success': True,
-                'message': 'Email sent successfully. Note the email was actually sent to ',
-                'message_id': response['MessageID']
+                "success": True,
+                "message": "Email sent successfully. Note the email was actually sent to ",
+                "message_id": response["MessageID"],
             }
 
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
 
             return {
-                'success': False,
-                'message': f'Failed to send email: {str(e)}',
-                'message_id': None
+                "success": False,
+                "message": f"Failed to send email: {str(e)}",
+                "message_id": None,
             }
 
-    def send_hoa_onboarding_email(self, hoa: HOA) -> Dict[str, any]:
+    def send_hoa_onboarding_email(
+        self, hoa: HOA, demo_email: str | None = None
+    ) -> dict[str, any]:
         """
         Generate and send onboarding email to an HOA
-        For demo purposes, all emails are redirected to raghvendra.singh@opendoor.com
+        For demo purposes, all emails are redirected to a demo email address
 
         Args:
             hoa: HOA instance to send email to
+            demo_email: Optional custom demo email address (defaults to raghv@mainstay.io)
 
         Returns:
             Dictionary with success status and message
@@ -249,15 +266,25 @@ class EmailService:
         email_content = self.generate_hoa_onboarding_email(hoa)
 
         # Demo email redirection
-        demo_email = "raghvendra.singh@opendoor.com"
+        default_demo_email = "raghv@mainstay.io"
+        target_email = demo_email or default_demo_email
         original_email = hoa.contact_email
 
-        logger.info(f"DEMO MODE: Redirecting email from {original_email} to {demo_email}")
-
-        return self.send_email(
-            to_email=demo_email,
-            subject=email_content['subject'],
-            body=email_content['body'],
-            is_html=True,
-            reply_to="4c17207b2cb109e33fb619e01b59252c@inbound.postmarkapp.com"
+        logger.info(
+            f"DEMO MODE: Redirecting email from {original_email} to {target_email}"
         )
+
+        result = self.send_email(
+            to_email=target_email,
+            subject=email_content["subject"],
+            body=email_content["body"],
+            is_html=True,
+            reply_to="4c17207b2cb109e33fb619e01b59252c@inbound.postmarkapp.com",
+        )
+
+        # Add demo information to the result
+        result["demo_email"] = target_email
+        result["original_email"] = original_email
+        result["is_custom_demo_email"] = demo_email is not None
+
+        return result

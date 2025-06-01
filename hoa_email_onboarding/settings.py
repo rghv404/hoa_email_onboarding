@@ -11,7 +11,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config, Csv
+
+from decouple import Csv, config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +22,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default="django-insecure-^285y1dr1j)_ad(c_y7c6kezq=dy7qm)+hfyj&sz=zsf_ql&$m")
+SECRET_KEY = config(
+    "SECRET_KEY",
+    default="django-insecure-^285y1dr1j)_ad(c_y7c6kezq=dy7qm)+hfyj&sz=zsf_ql&$m",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,rghv404.pythonanywhere.com', cast=Csv())
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    default="localhost,127.0.0.1,rghv404.pythonanywhere.com",
+    cast=Csv(),
+)
 
 
 # Application definition
@@ -126,11 +134,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # default static files settings for PythonAnywhere.
 # see https://help.pythonanywhere.com/pages/DjangoStaticFiles for more info
-MEDIA_ROOT = '/home/rghv404/hoa_email_onboarding/media'
-MEDIA_URL = '/media/'
-STATIC_ROOT = '/home/rghv404/hoa_email_onboarding/static'
-STATIC_URL = '/static/'
+MEDIA_ROOT = "/home/rghv404/hoa_email_onboarding/media"
+MEDIA_URL = "/media/"
+STATIC_ROOT = "/home/rghv404/hoa_email_onboarding/static"
+STATIC_URL = "/static/"
 
 # Postmark Configuration
-POSTMARK_API_TOKEN = config('POSTMARK_API_TOKEN', default='')
-POSTMARK_FROM_EMAIL = config('POSTMARK_FROM_EMAIL', default='noreply@yourdomain.com')
+POSTMARK_API_TOKEN = config("POSTMARK_API_TOKEN", default="")
+POSTMARK_FROM_EMAIL = config("POSTMARK_FROM_EMAIL", default="noreply@yourdomain.com")

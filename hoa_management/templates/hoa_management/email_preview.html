@@ -66,21 +66,58 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi bi-lightning"></i> Actions
+                    <i class="bi bi-lightning"></i> Send Demo Email
                 </h5>
             </div>
             <div class="card-body">
-                <div class="d-grid gap-2">
-                    <form method="post" action="{% url 'send_email' hoa.id %}" onsubmit="return confirm('Are you sure you want to send this email to {{ hoa.name }}?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-send-email w-100">
-                            <i class="bi bi-send"></i> Send This Email
-                        </button>
-                    </form>
+                <!-- Demo Notice -->
+                <div class="alert alert-warning alert-sm mb-3" style="font-size: 0.875rem;">
+                    <i class="bi bi-info-circle"></i> <strong>Demo Mode:</strong>
+                    <em>This email will be redirected to a demo address for testing, not to {{ hoa.contact_email }}</em>
+                </div>
 
-                    <a href="{% url 'hoa_detail' hoa.id %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Back to HOA Details
-                    </a>
+                <form method="post" action="{% url 'send_email' hoa.id %}" id="previewEmailForm">
+                    {% csrf_token %}
+
+                    <!-- Demo Email Input -->
+                    <div class="mb-3">
+                        <label for="demo_email" class="form-label">
+                            <i class="bi bi-envelope-at"></i> Demo Email Address
+                        </label>
+                        <input type="email" class="form-control" id="demo_email" name="demo_email"
+                               placeholder="raghv@mainstay.io (default)">
+                        <div class="form-text">
+                            Leave blank to use default demo address (raghv@mainstay.io).
+                            Enter your email to receive the test email.
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-send-email w-100">
+                            <i class="bi bi-send"></i> Send Demo Email
+                        </button>
+
+                        <a href="{% url 'hoa_detail' hoa.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to HOA Details
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Demo Information -->
+                <hr>
+                <div class="mt-3 p-2 bg-light rounded" style="font-size: 0.85rem;">
+                    <div class="mb-2">
+                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                        <strong>Remember:</strong> Check your spam/junk folder for the demo email
+                    </div>
+                    <div class="mb-2">
+                        <i class="bi bi-reply text-info"></i>
+                        <strong>Reply-to:</strong> 4c17207b2cb109e33fb619e01b59252c@inbound.postmarkapp.com
+                    </div>
+                    <div>
+                        <i class="bi bi-robot text-primary"></i>
+                        <strong>AI Preview:</strong> Reply to test inbound processing! Future Gemini LLM will automatically parse and respond.
+                    </div>
                 </div>
             </div>
         </div>

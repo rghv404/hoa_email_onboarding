@@ -1,7 +1,6 @@
 import logging
-from typing import Dict, Optional, Tuple
-from hoa_management.models import HOA, EmailResponse
 
+from hoa_management.models import HOA, EmailResponse
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +11,7 @@ class EmailResponseProcessor:
     Stores raw email content for later processing with LLM
     """
 
-    def find_hoa_from_email(self, from_email: str, subject: str) -> Optional[HOA]:
+    def find_hoa_from_email(self, from_email: str, subject: str) -> HOA | None:
         """
         Try to identify which HOA sent the email response
         """
@@ -24,9 +23,9 @@ class EmailResponseProcessor:
             pass
 
         # Try to extract HOA name from subject line if it contains our standard format
-        if 'Property Management Information Request' in subject and ' - ' in subject:
+        if "Property Management Information Request" in subject and " - " in subject:
             # Simple string split to get HOA name
-            parts = subject.split(' - ')
+            parts = subject.split(" - ")
             if len(parts) > 1:
                 hoa_name = parts[-1].strip()
                 try:
@@ -40,10 +39,14 @@ class EmailResponseProcessor:
             if hoa.name.lower() in subject.lower():
                 return hoa
 
-        logger.warning(f"Could not identify HOA for email from {from_email} with subject: {subject}")
+        logger.warning(
+            f"Could not identify HOA for email from {from_email} with subject: {subject}"
+        )
         return None
 
-    def process_inbound_email(self, postmark_data: Dict) -> Tuple[bool, str, Optional[EmailResponse]]:
+    def process_inbound_email(
+        self, postmark_data: dict
+    ) -> tuple[bool, str, EmailResponse | None]:
         """
         Process an inbound email from Postmark webhook
         Simplified version that just stores the raw email for later LLM processing
@@ -56,20 +59,28 @@ class EmailResponseProcessor:
         """
         try:
             # Extract email data from Postmark payload
-            from_email = postmark_data.get('From', '')
-            subject = postmark_data.get('Subject', '')
-            text_body = postmark_data.get('TextBody', '')
-            html_body = postmark_data.get('HtmlBody', '')
-            message_id = postmark_data.get('MessageID', '')
+            from_email = postmark_data.get("From", "")
+            subject = postmark_data.get("Subject", "")
+            text_body = postmark_data.get("TextBody", "")
+            html_body = postmark_data.get("HtmlBody", "")
+            message_id = postmark_data.get("MessageID", "")
 
             # Find the HOA
             hoa = self.find_hoa_from_email(from_email, subject)
             if not hoa:
-                return False, f"Could not identify HOA for email from {from_email}", None
+                return (
+                    False,
+                    f"Could not identify HOA for email from {from_email}",
+                    None,
+                )
 
             # Check if we already processed this email
             if EmailResponse.objects.filter(message_id=message_id).exists():
-                return False, f"Email with message ID {message_id} already processed", None
+                return (
+                    False,
+                    f"Email with message ID {message_id} already processed",
+                    None,
+                )
 
             # Create EmailResponse object with just the raw content
             # No parsing for now - will be processed later with LLM
@@ -82,10 +93,12 @@ class EmailResponseProcessor:
                 html_content=html_body,
                 text_content=text_body,
                 response_completeness_score=0,  # Will be calculated by LLM later
-                status='new'
+                status="new",
             )
 
-            logger.info(f"Successfully stored email response from {hoa.name} (ID: {email_response.id})")
+            logger.info(
+                f"Successfully stored email response from {hoa.name} (ID: {email_response.id})"
+            )
 
             return True, f"Successfully received email from {hoa.name}", email_response
 

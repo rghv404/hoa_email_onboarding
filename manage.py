@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.12
 """Django's command-line utility for administrative tasks."""
+
 import os
 import sys
 

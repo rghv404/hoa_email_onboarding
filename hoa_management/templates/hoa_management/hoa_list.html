@@ -23,13 +23,13 @@
         <div class="card card-hover h-100">
             <div class="card-body">
                 <h5 class="card-title">{{ hoa.name }}</h5>
-                
+
                 <div class="mb-3">
                     <small class="text-muted">
                         <i class="bi bi-geo-alt"></i> {{ hoa.address|truncatechars:50 }}
                     </small>
                 </div>
-                
+
                 <div class="mb-3">
                     <p class="card-text">
                         <i class="bi bi-envelope"></i> {{ hoa.contact_email }}<br>
@@ -42,13 +42,13 @@
                         <i class="bi bi-house"></i> {{ hoa.property_count }} properties
                     </p>
                 </div>
-                
+
                 {% if hoa.monthly_fee_range %}
                 <div class="mb-3">
                     <span class="badge bg-info">{{ hoa.monthly_fee_range }}</span>
                 </div>
                 {% endif %}
-                
+
                 <div class="d-flex gap-2">
                     <a href="{% url 'hoa_detail' hoa.id %}" class="btn btn-primary btn-sm">
                         <i class="bi bi-eye"></i> View Details
@@ -58,7 +58,7 @@
                     </a>
                 </div>
             </div>
-            
+
             <div class="card-footer text-muted">
                 <small>
                     <i class="bi bi-calendar"></i> Added {{ hoa.created_at|date:"M d, Y" }}
@@ -85,7 +85,7 @@
                 </a>
             </li>
         {% endif %}
-        
+
         {% for num in page_obj.paginator.page_range %}
             {% if page_obj.number == num %}
                 <li class="page-item active">
@@ -97,7 +97,7 @@
                 </li>
             {% endif %}
         {% endfor %}
-        
+
         {% if page_obj.has_next %}
             <li class="page-item">
                 <a class="page-link" href="?page={{ page_obj.next_page_number }}">

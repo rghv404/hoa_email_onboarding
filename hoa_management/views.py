@@ -1,16 +1,19 @@
-import random
 import json
 import logging
-from django.shortcuts import render, get_object_or_404, redirect
+import random
+
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from .models import HOA, Property, EmailResponse
-from services.email_service import EmailService
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
 from services.email_processor import EmailResponseProcessor
+from services.email_service import EmailService
+
+from .models import HOA, EmailResponse, Property
 
 
 def hoa_list(request):
@@ -23,15 +26,15 @@ def hoa_list(request):
 
     # Paginate the results
     paginator = Paginator(hoas, 12)  # Show 12 HOAs per page
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     context = {
-        'page_obj': page_obj,
-        'total_hoas': len(hoas),
+        "page_obj": page_obj,
+        "total_hoas": len(hoas),
     }
 
-    return render(request, 'hoa_management/hoa_list.html', context)
+    return render(request, "hoa_management/hoa_list.html", context)
 
 
 def hoa_detail(request, hoa_id):
@@ -39,18 +42,18 @@ def hoa_detail(request, hoa_id):
     Display details for a specific HOA including its properties and latest email response
     """
     hoa = get_object_or_404(HOA, id=hoa_id)
-    properties = hoa.properties.filter(is_active=True).order_by('address')
+    properties = hoa.properties.filter(is_active=True).order_by("address")
 
     # Get the most recent email response
     latest_response = hoa.email_responses.first()  # Already ordered by -created_at
 
     context = {
-        'hoa': hoa,
-        'properties': properties,
-        'latest_response': latest_response,
+        "hoa": hoa,
+        "properties": properties,
+        "latest_response": latest_response,
     }
 
-    return render(request, 'hoa_management/hoa_detail.html', context)
+    return render(request, "hoa_management/hoa_detail.html", context)
 
 
 def email_preview(request, hoa_id):
@@ -62,71 +65,88 @@ def email_preview(request, hoa_id):
     email_content = email_service.generate_hoa_onboarding_email(hoa)
 
     context = {
-        'hoa': hoa,
-        'email_subject': email_content['subject'],
-        'email_body': email_content['body'],
+        "hoa": hoa,
+        "email_subject": email_content["subject"],
+        "email_body": email_content["body"],
     }
 
-    return render(request, 'hoa_management/email_preview.html', context)
+    return render(request, "hoa_management/email_preview.html", context)
 
 
 @require_http_methods(["POST"])
 def send_email(request, hoa_id):
     """
-    Send onboarding email to an HOA
+    Send onboarding email to an HOA with optional demo email customization
     """
     hoa = get_object_or_404(HOA, id=hoa_id)
     email_service = EmailService()
 
-    try:
-        result = email_service.send_hoa_onboarding_email(hoa)
+    # Get custom demo email from form if provided
+    demo_email = request.POST.get("demo_email", "").strip() or None
 
-        if result['success']:
+    try:
+        result = email_service.send_hoa_onboarding_email(hoa, demo_email=demo_email)
+
+        if result["success"]:
+            demo_info = f"Demo email sent to: {result['demo_email']}"
+            if result["is_custom_demo_email"]:
+                demo_info += " (custom address)"
+            else:
+                demo_info += " (default demo address)"
+
             messages.success(
                 request,
-                f"Email sent successfully to {hoa.name} at {hoa.contact_email}!"
+                f"✅ Email sent successfully! {demo_info}. "
+                f"📧 Check your inbox (and spam folder) for the demo email. "
+                f"🤖 Reply to the email to test our inbound processing and see the future AI response feature!",
             )
         else:
             messages.error(
-                request,
-                f"Failed to send email to {hoa.name}: {result['message']}"
+                request, f"Failed to send email to {hoa.name}: {result['message']}"
             )
 
     except Exception as e:
         messages.error(
-            request,
-            f"An error occurred while sending email to {hoa.name}: {str(e)}"
+            request, f"An error occurred while sending email to {hoa.name}: {str(e)}"
         )
 
     # Redirect back to the HOA detail page
-    return redirect('hoa_detail', hoa_id=hoa_id)
+    return redirect("hoa_detail", hoa_id=hoa_id)
 
 
 @require_http_methods(["POST"])
 def send_email_ajax(request, hoa_id):
     """
-    Send onboarding email to an HOA via AJAX
+    Send onboarding email to an HOA via AJAX with demo email support
     """
     hoa = get_object_or_404(HOA, id=hoa_id)
     email_service = EmailService()
 
-    try:
-        result = email_service.send_hoa_onboarding_email(hoa)
+    # Get custom demo email from form if provided
+    demo_email = request.POST.get("demo_email", "").strip() or None
 
-        return JsonResponse({
-            'success': result['success'],
-            'message': result['message'],
-            'hoa_name': hoa.name,
-            'hoa_email': hoa.contact_email
-        })
+    try:
+        result = email_service.send_hoa_onboarding_email(hoa, demo_email=demo_email)
+
+        return JsonResponse(
+            {
+                "success": result["success"],
+                "message": result["message"],
+                "hoa_name": hoa.name,
+                "demo_email": result.get("demo_email"),
+                "is_custom_demo_email": result.get("is_custom_demo_email", False),
+            }
+        )
 
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f"An error occurred: {str(e)}",
-            'hoa_name': hoa.name,
-            'hoa_email': hoa.contact_email
-        })
+        return JsonResponse(
+            {
+                "success": False,
+                "message": f"An error occurred: {str(e)}",
+                "hoa_name": hoa.name,
+                "demo_email": None,
+            }
+        )
 
 
 def dashboard(request):
@@ -138,16 +158,16 @@ def dashboard(request):
     active_properties = Property.objects.filter(is_active=True).count()
 
     # Get some recent HOAs for quick access
-    recent_hoas = HOA.objects.order_by('-created_at')[:6]
+    recent_hoas = HOA.objects.order_by("-created_at")[:6]
 
     context = {
-        'total_hoas': total_hoas,
-        'total_properties': total_properties,
-        'active_properties': active_properties,
-        'recent_hoas': recent_hoas,
+        "total_hoas": total_hoas,
+        "total_properties": total_properties,
+        "active_properties": active_properties,
+        "recent_hoas": recent_hoas,
     }
 
-    return render(request, 'hoa_management/dashboard.html', context)
+    return render(request, "hoa_management/dashboard.html", context)
 
 
 @csrf_exempt
@@ -158,7 +178,7 @@ def postmark_webhook(request):
     """
     try:
         # Parse the JSON payload
-        payload = json.loads(request.body.decode('utf-8'))
+        payload = json.loads(request.body.decode("utf-8"))
 
         # Process the email
         processor = EmailResponseProcessor()
@@ -166,30 +186,27 @@ def postmark_webhook(request):
 
         if success:
             logging.info(f"Webhook processed successfully: {message}")
-            return JsonResponse({
-                'status': 'success',
-                'message': message,
-                'email_response_id': email_response.id if email_response else None
-            })
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "message": message,
+                    "email_response_id": email_response.id if email_response else None,
+                }
+            )
         else:
             logging.warning(f"Webhook processing failed: {message}")
-            return JsonResponse({
-                'status': 'error',
-                'message': message
-            }, status=400)
+            return JsonResponse({"status": "error", "message": message}, status=400)
 
     except json.JSONDecodeError:
         logging.error("Invalid JSON in webhook payload")
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid JSON payload'
-        }, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "Invalid JSON payload"}, status=400
+        )
     except Exception as e:
         logging.error(f"Webhook processing error: {str(e)}")
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Processing error: {str(e)}'
-        }, status=500)
+        return JsonResponse(
+            {"status": "error", "message": f"Processing error: {str(e)}"}, status=500
+        )
 
 
 @require_http_methods(["POST"])
@@ -200,19 +217,21 @@ def mark_response_reviewed(request, response_id):
     try:
         email_response = get_object_or_404(EmailResponse, id=response_id)
 
-        email_response.status = 'reviewed'
+        email_response.status = "reviewed"
         email_response.reviewed_at = timezone.now()
         # Note: In a real app, you'd want user authentication
         # email_response.reviewed_by = request.user
         email_response.save()
 
-        messages.success(request, f"Response from {email_response.hoa.name} marked as reviewed.")
+        messages.success(
+            request, f"Response from {email_response.hoa.name} marked as reviewed."
+        )
 
-        return redirect('hoa_detail', hoa_id=email_response.hoa.id)
+        return redirect("hoa_detail", hoa_id=email_response.hoa.id)
 
     except Exception as e:
         messages.error(request, f"Error marking response as reviewed: {str(e)}")
-        return redirect('hoa_list')
+        return redirect("hoa_list")
 
 
 def email_response_detail(request, response_id):
@@ -222,11 +241,11 @@ def email_response_detail(request, response_id):
     email_response = get_object_or_404(EmailResponse, id=response_id)
 
     context = {
-        'email_response': email_response,
-        'hoa': email_response.hoa,
+        "email_response": email_response,
+        "hoa": email_response.hoa,
     }
 
-    return render(request, 'hoa_management/email_response_detail.html', context)
+    return render(request, "hoa_management/email_response_detail.html", context)
 
 
 @require_http_methods(["POST"])
@@ -241,7 +260,7 @@ def parse_and_generate_response(request, response_id):
     messages.info(
         request,
         f"Parse and Generate Response feature will be implemented with Gemini LLM. "
-        f"Response from {email_response.hoa.name} is ready for processing."
+        f"Response from {email_response.hoa.name} is ready for processing.",
     )
 
-    return redirect('email_response_detail', response_id=response_id)
+    return redirect("email_response_detail", response_id=response_id)

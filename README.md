@@ -21,8 +21,10 @@ A comprehensive HOA (Homeowners Association) email onboarding system that showca
 
 ### **Outbound Email System**
 - Professional HTML email templates for HOA information requests
-- Automatic email redirection to demo address (`raghvendra.singh@opendoor.com`)
+- **Smart Demo Email Redirection** to `raghv@mainstay.io` (customizable per send)
+- **Custom Demo Email Input** - judges can use their own email for testing
 - Reply-to configuration pointing to Postmark inbound address
+- **Clear Demo Messaging** with spam folder warnings and AI feature previews
 - Comprehensive property and HOA information display
 
 ### **Inbound Email Processing**
@@ -109,11 +111,13 @@ python manage.py runserver
 1. **Visit**: `https://rghv404.pythonanywhere.com`
 2. **Browse HOAs**: View the list of sample HOAs
 3. **Select HOA**: Click on any HOA to view details
-4. **Send Email**: Use "Preview Email" → "Send This Email"
-5. **Check Demo Email**: Email sent to `raghvendra.singh@opendoor.com`
-6. **Reply to Email**: Respond to demonstrate inbound processing
-7. **View Response**: Check HOA detail page for received response
-8. **Process Response**: Use "View Full Response" and "Parse and Generate Response"
+4. **Customize Demo Email**: Enter your email address or use default `raghv@mainstay.io`
+5. **Send Email**: Use "Preview Email" → "Send Demo Email"
+6. **Check Your Inbox**: Email sent to your specified demo address (check spam folder!)
+7. **Reply to Email**: Respond to demonstrate inbound processing
+8. **View Response**: Check HOA detail page for received response
+9. **Process Response**: Use "View Full Response" and "Parse and Generate Response"
+10. **Experience AI Preview**: See messaging about future Gemini LLM integration
 
 ---
 

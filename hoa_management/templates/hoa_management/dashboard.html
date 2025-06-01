@@ -42,6 +42,37 @@
     </div>
 </div>
 
+<!-- Demo Information Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info" role="alert">
+            <h5 class="alert-heading">
+                <i class="bi bi-info-circle"></i> Demo Mode - Postmark Developer Challenge
+            </h5>
+            <p class="mb-2">
+                <strong>🎯 This application showcases Postmark's inbound email processing capabilities!</strong>
+            </p>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <small>
+                        <strong>📧 Email Redirection:</strong> All outbound emails redirect to <code>raghv@mainstay.io</code> for demo safety<br>
+                        <strong>📥 Inbound Processing:</strong> Reply to emails to test webhook processing<br>
+                        <strong>🤖 AI Preview:</strong> Future Gemini LLM integration for intelligent responses
+                    </small>
+                </div>
+                <div class="col-md-6">
+                    <small>
+                        <strong>🔗 Webhook URL:</strong> <code>/webhook/postmark-inbound/</code><br>
+                        <strong>📨 Inbound Email:</strong> <code>4c17207b...@inbound.postmarkapp.com</code><br>
+                        <strong>⚠️ Remember:</strong> Check spam folders for demo emails
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Quick Actions -->
 <div class="row mb-4">
     <div class="col-12">
@@ -103,7 +134,7 @@
                     </div>
                     {% endfor %}
                 </div>
-                
+
                 <div class="text-center mt-3">
                     <a href="{% url 'hoa_list' %}" class="btn btn-primary">
                         View All HOAs <i class="bi bi-arrow-right"></i>
