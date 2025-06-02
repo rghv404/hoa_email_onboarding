@@ -244,14 +244,22 @@ class EmailService:
 
             response = self.client.emails.send(**email_data)
 
+            # Handle both dict and list responses from Postmark
+            if isinstance(response, list) and len(response) > 0:
+                response = response[0]
+
+            message_id = (
+                response.get("MessageID", "") if isinstance(response, dict) else ""
+            )
+
             logger.info(
-                f"Email sent successfully to {to_email}. Message ID: {response['MessageID']}"
+                f"Email sent successfully to {to_email}. Message ID: {message_id}"
             )
 
             return {
                 "success": True,
-                "message": "Email sent successfully. Note the email was actually sent to ",
-                "message_id": response["MessageID"],
+                "message": "Email sent successfully",
+                "message_id": message_id,
             }
 
         except Exception as e:

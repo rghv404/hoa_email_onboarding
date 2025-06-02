@@ -89,6 +89,10 @@ def send_email(request, hoa_id):
         result = email_service.send_hoa_onboarding_email(hoa, demo_email=demo_email)
 
         if result["success"]:
+            # Store the demo email used for this HOA
+            hoa.demo_email_used = result["demo_email"]
+            hoa.save()
+
             demo_info = f"Demo email sent to: {result['demo_email']}"
             if result["is_custom_demo_email"]:
                 demo_info += " (custom address)"
@@ -128,6 +132,11 @@ def send_email_ajax(request, hoa_id):
 
     try:
         result = email_service.send_hoa_onboarding_email(hoa, demo_email=demo_email)
+
+        if result["success"]:
+            # Store the demo email used for this HOA
+            hoa.demo_email_used = result["demo_email"]
+            hoa.save()
 
         return JsonResponse(
             {
@@ -331,9 +340,9 @@ def send_generated_response(request, response_id):
         subject = f"Re: {email_response.subject}"
         body = email_response.ai_generated_response
 
-        # For demo purposes, redirect to demo email (same logic as original onboarding)
+        # Use the demo email that was used for the original onboarding, or fall back to default
         default_demo_email = "raghv@mainstay.io"
-        demo_email = default_demo_email  # TODO: Could be enhanced to remember user's custom demo email
+        demo_email = email_response.hoa.demo_email_used or default_demo_email
 
         # Send the email with proper threading headers
         result = email_service.send_email(

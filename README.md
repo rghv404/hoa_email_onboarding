@@ -120,9 +120,7 @@ python manage.py create_sample_response
 python manage.py runserver
 ```
 
-### **Configuration**
-
-#### **Postmark Setup**
+### **Postmark Configuration**
 1. **API Configuration**:
    - Set `POSTMARK_API_TOKEN` in `.env`
    - Configure `POSTMARK_FROM_EMAIL`
@@ -130,11 +128,6 @@ python manage.py runserver
 2. **Inbound Email Setup**:
    - Configure webhook URL: `https://rghv404.pythonanywhere.com/webhook/postmark-inbound/`
    - Set inbound email: `4c17207b2cb109e33fb619e01b59252c@inbound.postmarkapp.com`
-
-#### **🤖 Google Gemini AI Setup**
-1. **Get API Key**: Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. **Configure**: Set `GEMINI_API_KEY` in `.env`
-3. **Test**: Use "Parse and Generate Response" on any email response
 
 ## 🎯 **Demo Scenario**
 
@@ -147,28 +140,9 @@ python manage.py runserver
 6. **Check Your Inbox**: Email sent to your specified demo address (check spam folder!)
 7. **Reply to Email**: Respond to demonstrate inbound processing
 8. **View Response**: Check HOA detail page for received response
-9. **🤖 AI Analysis**: Click "Parse and Generate Response" to see AI in action
-10. **Review AI Results**: See categorization, confidence scores, and extracted data
-11. **Generated Response**: Review the AI-created follow-up email
-12. **Send AI Response**: Click "Send Generated Response" to complete the workflow
-
-### **🤖 AI Features to Demonstrate**
-- **Smart Categorization**: AI identifies response type with confidence scoring
-- **Data Extraction**: Structured information parsing from natural language
-- **Contextual Responses**: AI generates appropriate follow-up emails
-- **Beautiful UI**: Progress bars, badges, and clear reasoning display
-- **Demo Safety**: All AI-generated emails safely routed to demo addresses
+9. **Process Response**: Use "View Full Response" and "Parse and Generate Response"
+10. **Experience AI Preview**: See messaging about future Gemini LLM integration
 
 ---
 
-**Built for the Postmark Developer Challenge** - Showcasing the power of inbound email processing with Google Gemini AI integration in a real-world HOA management application.
-
-## 🏆 **Key Achievements**
-
-✅ **Complete Email Workflow**: Outbound → Inbound → AI Analysis → Response Generation
-✅ **Google Gemini AI Integration**: Intelligent email parsing and response generation
-✅ **5-Scenario Classification**: Smart categorization with confidence scoring
-✅ **Beautiful UI**: Professional interface with AI result visualization
-✅ **Demo-Safe**: All emails properly routed to demo addresses
-✅ **Production Ready**: Comprehensive error handling and logging
-✅ **Postmark Integration**: Full webhook processing with email threading
+**Built for the Postmark Developer Challenge** - Showcasing the power of inbound email processing with a real-world HOA management application.

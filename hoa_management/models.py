@@ -42,6 +42,11 @@ class HOA(models.Model):
         null=True,
         help_text="Monthly fee range (e.g., '$200-$400')",
     )
+    demo_email_used = models.EmailField(
+        blank=True,
+        null=True,
+        help_text="Demo email address used for this HOA's onboarding",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
