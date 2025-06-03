@@ -228,11 +228,11 @@ class EmailService:
                 email_data["ReplyTo"] = reply_to
 
             # Add threading headers for email conversation
-            headers = []
+            headers = {}
             if in_reply_to:
-                headers.append({"Name": "In-Reply-To", "Value": in_reply_to})
+                headers["In-Reply-To"] = in_reply_to
             if references:
-                headers.append({"Name": "References", "Value": references})
+                headers["References"] = references
 
             if headers:
                 email_data["Headers"] = headers
